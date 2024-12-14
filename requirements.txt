@@ -3,3 +3,4 @@ loguru==0.7.3
 openai==1.57.4
 APScheduler==3.11.0
 pytz==2024.2
+requests==2.32.3
