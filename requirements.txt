@@ -1,0 +1,5 @@
+pydantic_settings==2.7.0
+loguru==0.7.3
+openai==1.57.4
+APScheduler==3.11.0
+pytz==2024.2
