@@ -1,3 +1,9 @@
+import asyncio
+
+from services.apidance_service import api_dance_service
+from services.gpt_analyze_services import gpt_analyze_service
+from utils.language_detection import language_detection
+
 data = {"pinned_tweet": None, "tweets":
     [{"tweet_id": "1867412735946109218", "user_id": "1661204064376348672", "media_type": ""
          , "text": "this is my first\n😀😀", "medias": None, "is_self_send": True, "is_retweet": False, "is_quote": False
@@ -44,15 +50,32 @@ data = {"pinned_tweet": None, "tweets":
                     "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"}}]
     , "next_cursor_str": ""}
 
+historical_replies_list = list()
 
-def reply_analysis(data):
+
+async def reply_analysis(data):
     if data:
         tweets = data.get('tweets', None)
         for tweet in tweets:
             if tweet.get('user_id') == "1661204064376348672":
                 continue
-            print(tweet)
+            if tweet.get('tweet_id') in historical_replies_list:
+                continue
+            historical_replies_list.append(tweet.get('tweet_id'))
+            text = tweet.get('text', None)
+            cleaned_string = text.replace("@mr_gongmm", "").strip()
+            language_result = await language_detection(cleaned_string)
+            print(language_result.name)
+            result = await gpt_analyze_service.twitter_name_analyzer(cleaned_string)
+            data = await gpt_analyze_service.get_gpt_translation(result, language_result.name)
+            api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=tweet['tweet_id'])
+            print(data)
+            print(result)
+
+
+async def main():
+    await reply_analysis(data)
 
 
 if __name__ == '__main__':
-    reply_analysis(data)
+    asyncio.run(main())

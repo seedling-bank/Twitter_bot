@@ -12,5 +12,7 @@ class Settings(BaseSettings):
     MAX_RETRIES: int = 5
     DELAY: int = 5
 
+    TWITTER_ID: str = '4654805796'
+
 
 settings = Settings()

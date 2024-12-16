@@ -81,5 +81,38 @@ class GptAnalyzeService:
             answer = result.choices[0].message.content
             return answer
 
+    async def get_gpt_translation(self, message, language):
+        try:
+            prompt = f"""
+                Please translate all text in the following paragraph into {language}, but keep any text after the "#" 
+                symbol untranslated. Include it in the output as it is: "{message}"
+            """
+            second_retry_limit = 3
+            second_retry_count = 0
+            second_successful_completion = False
+
+            while (
+                    second_retry_count < second_retry_limit
+                    and not second_successful_completion
+            ):
+                try:
+                    result =  await self. open_ai_client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.1,
+                    )
+                    second_successful_completion = True  # 标记成功
+                except Exception as e:
+                    loguru.logger.error(traceback.format_exc())
+                    second_retry_count += 1  # 递增重试次数
+
+                answer = result.choices[0].message.content
+                return answer
+        except Exception as e:
+            loguru.logger.error(e)
+            loguru.logger.error(traceback.format_exc())
+
 
 gpt_analyze_service = GptAnalyzeService()
