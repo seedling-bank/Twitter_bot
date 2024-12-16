@@ -26,6 +26,6 @@ scheduler = BlockingScheduler(
 
 tracemalloc.start()
 
-scheduler.add_job(automatically_tweet.run, **automatically_tweet.get_scheduler())
+# scheduler.add_job(automatically_tweet.run, **automatically_tweet.get_scheduler())
 scheduler.add_job(automatically_reply.run, **automatically_reply.get_scheduler())
 scheduler.start()

@@ -20,15 +20,16 @@ class AutomaticallyReply(BaseJob):
     def __init__(self):
         self.reply_to_twitter = []
         self.replied_id_list = []
+        self.temporary_twitter_id = []
 
     def init(self):
-        loguru.logger.info("Initializing AutomaticallyTweet")
+        loguru.logger.info("Initializing AutomaticallyReply")
 
     def get_scheduler(self):
         return {
             "trigger": "cron",
             "second": "0",  # 指定秒数为0
-            "minute": "*/1",
+            "minute": "*/5",
             "hour": "*",  # 任意小时
             "day": "*",  # 任意日期
             "month": "*",  # 任意月份
@@ -46,25 +47,26 @@ class AutomaticallyReply(BaseJob):
                     break
                 elif 'errors' not in user_twitter_data:
                     break
-
+            print(user_twitter_data)
             twitter_list = twitter_service.user_data_processing(user_twitter_data)
+            twitter_list = list(set(twitter_list))
+            twitter_list.extend(self.temporary_twitter_id)
 
             if twitter_list:
                 for twitter_id in twitter_list:
-                    if twitter_id in self.replied_id_list:
-                        continue
-                    while True:
-                        try:
-                            result = api_dance_service.get_twitter_details(twitter_id)
-                            print(result)
-                            if result != "local_rate_limited":  # 检查条件
-                                if 'Rate limit exceeded.' not in result:
-                                    print(1)
-                                    twitter_info = twitter_service.remove_current_user(json.loads(result))
-                                    self.reply_to_twitter.extend(twitter_info)
-                                    break
-                        except Exception as e:
-                            pass
+                    if twitter_id not in self.replied_id_list:
+                        while True:
+                            try:
+                                result = api_dance_service.get_twitter_details(twitter_id)
+                                print(result)
+                                if result != "local_rate_limited":  # 检查条件
+                                    if 'Rate limit exceeded.' not in result:
+                                        print(1)
+                                        twitter_info = twitter_service.remove_current_user(json.loads(result))
+                                        self.reply_to_twitter.extend(twitter_info)
+                                        break
+                            except Exception as e:
+                                pass
             if self.reply_to_twitter:
                 for twitter_reply in self.reply_to_twitter:
                     twitter_text = twitter_reply.get('text', None)
@@ -76,14 +78,15 @@ class AutomaticallyReply(BaseJob):
                         data = await gpt_analyze_service.get_gpt_translation(result, twitter_reply['language'])
                         twitter_return = api_dance_service.send_reply_to_twitter(twitter_content=data,
                                                                                  twitter_id=twitter_reply['tweet_id'])
-                        twitter_return_id = twitter_service.get_reply_id(twitter_return)
-                        self.replied_id_list.append(twitter_return_id)
+                        twitter_return_id = twitter_service.get_reply_id(json.loads(twitter_return))
+                        self.replied_id_list.append(twitter_reply['tweet_id'])
+                        self.temporary_twitter_id.append(twitter_return_id)
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
 
     async def do_job(self):
-        loguru.logger.info("---->{TradingToken} start")
+        loguru.logger.info("---->{AutomaticallyReply} start")
         await self.twitter_bot()
 
 
