@@ -5,7 +5,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 import pytz
 
-
+from hub.automaticallu_reply_bot import automatically_reply
 from hub.automatically_tweet_bot import automatically_tweet
 
 jobstores = {
@@ -27,4 +27,5 @@ scheduler = BlockingScheduler(
 tracemalloc.start()
 
 scheduler.add_job(automatically_tweet.run, **automatically_tweet.get_scheduler())
+scheduler.add_job(automatically_reply.run, **automatically_reply.get_scheduler())
 scheduler.start()
