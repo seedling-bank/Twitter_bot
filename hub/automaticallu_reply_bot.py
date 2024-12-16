@@ -47,12 +47,11 @@ class AutomaticallyReply(BaseJob):
                     break
                 elif 'errors' not in user_twitter_data:
                     break
-            print(user_twitter_data)
             twitter_list = twitter_service.user_data_processing(user_twitter_data)
-            twitter_list = list(set(twitter_list))
-            twitter_list.extend(self.temporary_twitter_id)
 
             if twitter_list:
+                twitter_list = list(set(twitter_list))
+                twitter_list.extend(self.temporary_twitter_id)
                 for twitter_id in twitter_list:
                     if twitter_id not in self.replied_id_list:
                         while True:
