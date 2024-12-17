@@ -8,18 +8,18 @@ language = [
     Language.ENGLISH,  # 英语
     Language.CHINESE,  # 中文
     Language.JAPANESE,  # 日语
-    Language.KOREAN,  # 韩语
-    Language.FRENCH,  # 法语
+    # Language.KOREAN,  # 韩语
+    # Language.FRENCH,  # 法语
     # Language.AFRIKAANS,
     # Language.ALBANIAN,
-    Language.ARABIC,    # 阿拉伯语
+    # Language.ARABIC,    # 阿拉伯语
     # Language.ARMENIAN,
     # Language.AZERBAIJANI,
     # Language.INDONESIAN,
     # Language.BASQUE,
     # Language.BELARUSIAN,
-    Language.GERMAN,    # 德语
-    Language.SPANISH,   # 西班牙语
+    # Language.GERMAN,    # 德语
+    # Language.SPANISH,   # 西班牙语
     # Language.BENGALI,
     # Language.BOKMAL,
     # Language.BOSNIAN,
@@ -55,10 +55,10 @@ language = [
     # Language.NYNORSK,
     # Language.PERSIAN,
     # Language.POLISH,
-    Language.PORTUGUESE, # 葡萄牙语
+    # Language.PORTUGUESE, # 葡萄牙语
     # Language.PUNJABI,
     # Language.ROMANIAN,
-    Language.RUSSIAN, # 俄语
+    # Language.RUSSIAN, # 俄语
     # Language.SERBIAN,
     # Language.SHONA,
     # Language.SLOVAK,
@@ -70,13 +70,13 @@ language = [
     # Language.TAGALOG,
     # Language.TAMIL,
     # Language.TELUGU,
-    Language.THAI,  # 泰语
+    # Language.THAI,  # 泰语
     # Language.TSONGA,
     # Language.TSWANA,
-    Language.TURKISH,   #土耳其语
+    # Language.TURKISH,   #土耳其语
     # Language.UKRAINIAN,
     # Language.URDU,
-    Language.VIETNAMESE,    # 越南语
+    # Language.VIETNAMESE,    # 越南语
     # Language.WELSH,
     # Language.XHOSA,
     # Language.YORUBA,
