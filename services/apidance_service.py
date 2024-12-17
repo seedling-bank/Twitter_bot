@@ -1,3 +1,4 @@
+import asyncio
 import http.client
 import json
 import ssl
@@ -8,6 +9,7 @@ import loguru
 import requests
 
 import con.config
+from services.twitter_service import twitter_service
 
 
 class ApiDanceService:
@@ -163,9 +165,50 @@ class ApiDanceService:
         response = requests.request("POST", url, headers=headers, data=payload)
         return response.text
 
+    async def get_user_twitter_article(self, user_id: str):
+        try:
+            loguru.logger.error(user_id)
+            while True:
+                result = await self.get_user_twitter_data_by_apidance(user_id=user_id)
+                if result != "local_rate_limited":
+                    if 'Rate limit exceeded.' not in result:
+                        break
+            data = twitter_service.user_twitter_processing(json.loads(result))
+            return data
+        except Exception as e:
+            loguru.logger.error(e)
+            loguru.logger.error(traceback.format_exc())
+            return False
+
+    async def get_user_twitter_data_by_apidance(self, user_id: str):
+        if user_id:
+            base_url = "https://api.apidance.pro/graphql/UserTweets?variables="
+            payload = {}
+            headers = {
+                'apikey': self.api_key
+            }
+
+            variables = {
+                "userId": user_id,
+                "count": 20,
+                "includePromotedContent": False,
+                "withQuickPromoteEligibilityTweetFields": True,
+                "withVoice": True,
+                "withV2Timeline": True,
+            }
+            url = base_url + json.dumps(variables)
+            response = requests.request("GET", url, headers=headers, data=payload)
+            if response.status_code == 200:
+                return response.text
+
 
 api_dance_service = ApiDanceService()
 
-if __name__ == '__main__':
-    result = api_dance_service.get_user_tweets_and_replies(4654805796)
+
+async def main():
+    result = await api_dance_service.get_user_twitter_article("1709536223294017537")
     print(result)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

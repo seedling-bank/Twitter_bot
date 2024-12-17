@@ -3,6 +3,7 @@ import json
 import re
 import time
 import traceback
+from asyncio import Lock
 
 import loguru
 
@@ -10,6 +11,7 @@ import con.config
 from base import BaseJob
 from services.apidance_service import api_dance_service
 from services.gpt_analyze_services import gpt_analyze_service
+from services.mbti_service import mbti_service
 from services.twitter_service import twitter_service
 from utils.content_generation import twitter_content_generation
 from utils.language_detection import language_detection
@@ -19,9 +21,8 @@ from utils.search_term import get_search_term
 class AutomaticallyReply(BaseJob):
 
     def __init__(self):
-        self.reply_to_twitter = []
         self.replied_id_list = []  # 定义已回复list
-        self.temporary_twitter_id = []
+        self.lock = Lock()
 
     def init(self):
         loguru.logger.info("Initializing AutomaticallyReply")
@@ -62,18 +63,23 @@ class AutomaticallyReply(BaseJob):
             loguru.logger.error(traceback.format_exc())
 
     async def process_twitter_info(self, twitter_info, gpt_analyze_service, api_dance_service, semaphore):
-        async with semaphore:
-            if twitter_info['tweet_id'] not in self.replied_id_list:
-                twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
+        async with self.lock:  # 确保检查和更新是原子操作
+            if twitter_info['tweet_id'] in self.replied_id_list:
+                return  # 如果已经回复过，直接返回h
+            if "@lyricpaxsrks 我的MBTI" in twitter_info['tweet_content']:
                 language_result = await language_detection(twitter_info['tweet_content'])
                 twitter_info['language'] = language_result.name
-                result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
-                data = await gpt_analyze_service.get_gpt_translation(result, twitter_info['language'])
-                api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
-                del twitter_info['language']
-                del twitter_info['tweet_content']
-                del twitter_info['tweet_name']
+                asyncio.create_task(self.user_mbti_analyzer(twitter_info))
                 self.replied_id_list.append(twitter_info['tweet_id'])
+                return
+
+            # twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
+            # language_result = await language_detection(twitter_info['tweet_content'])
+            # twitter_info['language'] = language_result.name
+            # result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
+            # data = await gpt_analyze_service.get_gpt_translation(result, twitter_info['language'])
+            # api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
+            # self.replied_id_list.append(twitter_info['tweet_id'])
 
     async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
                                        api_dance_service, max_concurrent_tasks=10):
@@ -85,6 +91,17 @@ class AutomaticallyReply(BaseJob):
         ]
         # 并发运行所有任务
         await asyncio.gather(*tasks)
+
+    async def user_mbti_analyzer(self, twitter_info):
+        if twitter_info:
+            user_twitter_id = twitter_info['id_str']
+            user_twitter_data = await api_dance_service.get_user_twitter_article(user_twitter_id)
+            print(user_twitter_data)
+            user_mbti = await mbti_service.get_user_mbti_analyze(data=user_twitter_data, user_name=twitter_info['id_str'])
+            data = await gpt_analyze_service.get_gpt_translation(user_mbti, twitter_info['language'])
+            print(data)
+            print(twitter_info['tweet_id'])
+            api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
 
     async def do_job(self):
         loguru.logger.info("---->{AutomaticallyReply} start")

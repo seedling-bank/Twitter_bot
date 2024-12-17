@@ -21,9 +21,8 @@ class AutomaticallyTweet(BaseJob):
         return {
             "trigger": "cron",
             "second": "0",  # 指定秒数为0
-            # "minute": "0",
-            "minute": "*/30",
-            "hour": "*",  # 任意小时
+            "minute": "0",
+            "hour": "*/1",  # 任意小时
             # "hour": "*",  # 任意小时
             "day": "*",  # 任意日期
             "month": "*",  # 任意月份
