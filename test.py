@@ -1,85 +1,61 @@
-import asyncio
-import traceback
+import time
 
-import loguru
+import requests
+from requests_oauthlib import OAuth1
 
-data = {"data": {"create_tweet": {"tweet_results": {"result": {"core": {"user_results":
-                                                                            {"result": {"__typename": "User",
-                                                                                        "affiliates_highlighted_label": {},
-                                                                                        "has_graduated_access": True
-                                                                                , "id": "VXNlcjo0NjU0ODA1Nzk2",
-                                                                                        "is_blue_verified": False
-                                                                                , "legacy": {"can_dm": True,
-                                                                                             "can_media_tag": True,
-                                                                                             "created_at": "Sat Dec 26 11:14:17 +0000 2015"
-                                                                                    , "default_profile": True,
-                                                                                             "default_profile_image": False
-                                                                                    ,
-                                                                                             "description": "Risks must be taken, because the greatest hazard in life is to risk nothing."
-                                                                                    , "entities": {
-                                                                                        "description": {"urls": []}},
-                                                                                             "fast_followers_count": 0,
-                                                                                             "favourites_count": 17
-                                                                                    , "followers_count": 971,
-                                                                                             "friends_count": 1749,
-                                                                                             "has_custom_timelines": False
-                                                                                    , "is_translator": False,
-                                                                                             "listed_count": 0,
-                                                                                             "location": "",
-                                                                                             "media_count": 0
-                                                                                    , "name": "Testing",
-                                                                                             "needs_phone_verification": False,
-                                                                                             "normal_followers_count": 971
-                                                                                    , "pinned_tweet_ids_str": [],
-                                                                                             "possibly_sensitive": False
-                                                                                    ,
-                                                                                             "profile_image_url_https": "https://pbs.twimg.com/profile_images/1849020276174102528/OtMhYcDU_normal.jpg"
-                                                                                    , "profile_interstitial_type": "",
-                                                                                             "screen_name": "lyricpaxsrks",
-                                                                                             "statuses_count": 55
-                                                                                    , "translator_type": "none",
-                                                                                             "verified": False,
-                                                                                             "want_retweets": False
-                                                                                    , "withheld_in_countries": []},
-                                                                                        "profile_image_shape": "Circle",
-                                                                                        "rest_id": "4654805796"}}}
-    , "edit_control":
-                                                                   {"edit_tweet_ids": ["1868559812046557237"]
-                                                                       , "editable_until_msecs": "1734337950000"
-                                                                       , "edits_remaining": "5",
-                                                                    "is_edit_eligible": False}
-    , "is_translatable": False
-    , "legacy": {"bookmark_count": 0, "bookmarked": False
-        , "conversation_id_str": "1867412735946109218"
-        , "created_at": "Mon Dec 16 07:32:30 +0000 2024"
-        , "display_text_range": [11, 29]
-        , "entities": {"hashtags": [], "symbols": []
-            , "urls": [], "user_mentions":
-                           [{"id_str": "1661204064376348672"
-                                , "indices": [0, 10]
-                                , "name": "mr.gong"
-                                , "screen_name": "mr_gongmm"}]}
-        , "favorite_count": 0, "favorited": False
-        , "full_text": "@mr_gongmm this is am example"
-        , "id_str": "1868559812046557237"
-        , "in_reply_to_screen_name": "mr_gongmm"
-        , "in_reply_to_status_id_str": "1867412735946109218"
-        , "in_reply_to_user_id_str": "1661204064376348672"
-        , "is_quote_status": False, "lang": "en"
-        , "quote_count": 0, "reply_count": 0
-        , "retweet_count": 0, "retweeted": False
-        , "user_id_str": "4654805796"}
-    , "rest_id": "1868559812046557237"
-    , "source": "\u003ca href=\"https://twitter.com\" rel=\"nofollow\"\u003eTweetDeck Web App\u003c/a\u003e"
-    , "unmention_data": {}, "unmention_info": {}
-    , "views": {"state": "Enabled"}}}}}}
+# 你的 Twitter/X API 凭据
+API_KEY = "bxVqLNzMRUmGUY5dTRCPDb2Sg"
+API_SECRET_KEY = "riCChKdLJLk9n5gsv2dvRypqmsQKXbkxflqgPRavMU3jiT3P5U"
+ACCESS_TOKEN = "1709536223294017537-JeEQZG5ASNrekt6S8PA8OUuMirDphP"
+ACCESS_TOKEN_SECRET = "5mu7Chce1ijRSI8lBNEI7ChFN6N0aAWSQyJctmeffUxdJ"
 
 
+def get_user_tweets(user_id):
+    # 你的 Bearer Token
+    # BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAPcWxgEAAAAAAu3Jg4rwziCG811BICOvgN3oV%2Fg%3DfSdcuOVFiEB96leKJUKF6mb2QQgK0zVZf4kCbC1chLwEuMVvo8"
+    BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAGOuwEAAAAA4QtVadeOZlMXxJdWNynSjnXxuTs%3DwY3bUZwP0deo6vCTKjN5WusxYLZ2ZqfK9z8kPk0zM8zEDjh4iA"
+
+    # 请求 URL
+    url = f"https://api.twitter.com/2/users/{user_id}/tweets"
 
 
+    # 请求头
+    headers = {
+        "Authorization": f"Bearer {BEARER_TOKEN}"
+    }
 
-async def main():
-    await get_reply_id(data)
+    # 请求参数
+    params = {
+        "max_results": 100  # 获取最多 100 条推文
+    }
+
+    # 发送 GET 请求
+    response = requests.get(url, headers=headers, params=params)
+
+    # 检查响应状态码
+    if response.status_code == 200:
+        # 请求成功，解析 JSON 数据
+        tweets = response.json()
+        return tweets
+    elif response.status_code == 429:
+        # 速率限制，解析响应头
+        reset_time = int(response.headers.get("x-rate-limit-reset", time.time()))
+        current_time = int(time.time())
+        wait_time = reset_time - current_time
+
+        print("Rate limit exceeded.")
+        print(f"Rate limit will reset in {wait_time} seconds (at {time.ctime(reset_time)}).")
+
+        # 等待限制解除
+        time.sleep(wait_time + 1)  # 多等 1 秒，确保限制已解除
+        return get_user_tweets(user_id)  # 重试请求
+    else:
+        # 请求失败，打印错误信息
+        print(f"Error: {response.status_code}")
+        print(response.text)
+
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    result = get_user_tweets(4654805796)
+    print(result)
+

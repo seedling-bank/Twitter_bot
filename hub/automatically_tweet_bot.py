@@ -21,9 +21,9 @@ class AutomaticallyTweet(BaseJob):
         return {
             "trigger": "cron",
             "second": "0",  # 指定秒数为0
-            "minute": "0",
-            # "minute": "*/10",
-            "hour": "*/1",  # 任意小时
+            # "minute": "0",
+            "minute": "*/30",
+            "hour": "*",  # 任意小时
             # "hour": "*",  # 任意小时
             "day": "*",  # 任意日期
             "month": "*",  # 任意月份
@@ -37,8 +37,12 @@ class AutomaticallyTweet(BaseJob):
             search_list = ['btc', 'eth', 'web3', 'ai', 'agent']
             search = get_search_term(search_list)
             loguru.logger.info(f"Searching for {search}")
-            search_results = api_dance_service.get_search_data(search=search)
-            loguru.logger.info(f"search_results for {search_results}")
+            while True:
+                search_results = api_dance_service.get_search_data(search=search)
+                if search_results != "local_rate_limited":
+                    if 'Rate limit exceeded.' not in search_results:
+                        break
+                loguru.logger.info(f"search_results for {search_results}")
             user_info = twitter_service.get_twitter_username(json.loads(search_results))
             loguru.logger.info(f"user_info for {user_info}")
             initial_content = await gpt_analyze_service.twitter_name_analyzer(user_info.get("user_username"))

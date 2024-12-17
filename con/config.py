@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     DELAY: int = 5
 
     TWITTER_ID: str = '4654805796'
+    TWITTER_NAME: str = '@lyricpaxsrks'
 
 
 settings = Settings()

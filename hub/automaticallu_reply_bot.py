@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import time
 import traceback
 
 import loguru
@@ -19,7 +20,7 @@ class AutomaticallyReply(BaseJob):
 
     def __init__(self):
         self.reply_to_twitter = []
-        self.replied_id_list = []
+        self.replied_id_list = []  # 定义已回复list
         self.temporary_twitter_id = []
 
     def init(self):
@@ -28,8 +29,8 @@ class AutomaticallyReply(BaseJob):
     def get_scheduler(self):
         return {
             "trigger": "cron",
-            "second": "0",  # 指定秒数为0
-            "minute": "*/5",
+            "second": "*/30",  # 指定秒数为0
+            "minute": "*",
             "hour": "*",  # 任意小时
             "day": "*",  # 任意日期
             "month": "*",  # 任意月份
@@ -39,50 +40,50 @@ class AutomaticallyReply(BaseJob):
         }
 
     async def twitter_bot(self):
-
+        list_twitter_reply = list()
+        search_result_list = []
         try:
+            # 获取搜索第一页
             while True:
-                user_twitter_data = api_dance_service.get_user_twitter_data(user_id=con.config.settings.TWITTER_ID)
-                if user_twitter_data != "local_rate_limited":
-                    break
-                elif 'errors' not in user_twitter_data:
-                    break
-            twitter_list = twitter_service.user_data_processing(user_twitter_data)
+                search_results = api_dance_service.get_search_data(search=con.config.settings.TWITTER_NAME)
+                if search_results != "local_rate_limited":
+                    if 'Rate limit exceeded.' not in search_results:
+                        break
+            if search_results:
+                tweets = json.loads(search_results).get('tweets')
+                search_result_list.extend(tweets)
 
-            if twitter_list:
-                twitter_list = list(set(twitter_list))
-                twitter_list.extend(self.temporary_twitter_id)
-                for twitter_id in twitter_list:
-                    if twitter_id not in self.replied_id_list:
-                        while True:
-                            try:
-                                result = api_dance_service.get_twitter_details(twitter_id)
-                                print(result)
-                                if result != "local_rate_limited":  # 检查条件
-                                    if 'Rate limit exceeded.' not in result:
-                                        print(1)
-                                        twitter_info = twitter_service.remove_current_user(json.loads(result))
-                                        self.reply_to_twitter.extend(twitter_info)
-                                        break
-                            except Exception as e:
-                                pass
-            if self.reply_to_twitter:
-                for twitter_reply in self.reply_to_twitter:
-                    twitter_text = twitter_reply.get('text', None)
-                    if twitter_text:
-                        twitter_reply['text'] = re.sub(r'@\w+', "", twitter_text).strip()
-                        language_result = await language_detection(twitter_reply['text'])
-                        twitter_reply['language'] = language_result.name
-                        result = await gpt_analyze_service.twitter_name_analyzer(twitter_reply['text'])
-                        data = await gpt_analyze_service.get_gpt_translation(result, twitter_reply['language'])
-                        twitter_return = api_dance_service.send_reply_to_twitter(twitter_content=data,
-                                                                                 twitter_id=twitter_reply['tweet_id'])
-                        twitter_return_id = twitter_service.get_reply_id(json.loads(twitter_return))
-                        self.replied_id_list.append(twitter_reply['tweet_id'])
-                        self.temporary_twitter_id.append(twitter_return_id)
+            response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
+
+            if response_list_required:
+                await self.process_all_twitter_info(response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
+
+    async def process_twitter_info(self, twitter_info, gpt_analyze_service, api_dance_service, semaphore):
+        async with semaphore:
+            if twitter_info['tweet_id'] not in self.replied_id_list:
+                twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
+                language_result = await language_detection(twitter_info['tweet_content'])
+                twitter_info['language'] = language_result.name
+                result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
+                data = await gpt_analyze_service.get_gpt_translation(result, twitter_info['language'])
+                api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
+                del twitter_info['language']
+                del twitter_info['tweet_content']
+                self.replied_id_list.append(twitter_info)
+
+    async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
+                                       api_dance_service, max_concurrent_tasks=10):
+        semaphore = asyncio.Semaphore(max_concurrent_tasks)
+        # 创建任务列表
+        tasks = [
+            self.process_twitter_info(twitter_info, gpt_analyze_service, api_dance_service, semaphore)
+            for twitter_info in response_list_required
+        ]
+        # 并发运行所有任务
+        await asyncio.gather(*tasks)
 
     async def do_job(self):
         loguru.logger.info("---->{AutomaticallyReply} start")
