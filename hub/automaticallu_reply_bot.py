@@ -57,13 +57,13 @@ class AutomaticallyReply(BaseJob):
             loguru.logger.error(f"response_list_required----------------_{response_list_required}")
             loguru.logger.error(f"self.replied_id_set----------------_{self.replied_id_set}")
             if response_list_required:
-                for twitter_info in response_list_required:
-                    if (twitter_info['tweet_id'] not in self.replied_id_set and
-                            "@lyricpaxsrks 我的MBTI" in twitter_info['tweet_content']):
-                        language_result = await language_detection(twitter_info['tweet_content'])
-                        twitter_info['language'] = language_result.name
-                        asyncio.create_task(await self.user_mbti_analyzer(twitter_info))
-                        self.replied_id_set.add(twitter_info['tweet_id'])
+                # for twitter_info in response_list_required:
+                #     if (twitter_info['tweet_id'] not in self.replied_id_set and
+                #             "@lyricpaxsrks 我的MBTI" in twitter_info['tweet_content']):
+                #         language_result = await language_detection(twitter_info['tweet_content'])
+                #         twitter_info['language'] = language_result.name
+                #         asyncio.create_task(self.user_mbti_analyzer(twitter_info))
+                #         self.replied_id_set.add(twitter_info['tweet_id'])
                 await self.process_all_twitter_info(response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
