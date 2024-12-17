@@ -29,7 +29,7 @@ class AutomaticallyReply(BaseJob):
     def get_scheduler(self):
         return {
             "trigger": "cron",
-            "second": "*/30",  # 指定秒数为0
+            "second": "*/10",  # 指定秒数为0
             "minute": "*",
             "hour": "*",  # 任意小时
             "day": "*",  # 任意日期
@@ -40,7 +40,6 @@ class AutomaticallyReply(BaseJob):
         }
 
     async def twitter_bot(self):
-        list_twitter_reply = list()
         search_result_list = []
         try:
             # 获取搜索第一页
@@ -54,7 +53,8 @@ class AutomaticallyReply(BaseJob):
                 search_result_list.extend(tweets)
 
             response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
-
+            loguru.logger.error(f"response_list_required----------------_{response_list_required}")
+            loguru.logger.error(f"self.replied_id_list----------------_{self.replied_id_list}")
             if response_list_required:
                 await self.process_all_twitter_info(response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
@@ -72,7 +72,8 @@ class AutomaticallyReply(BaseJob):
                 api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
                 del twitter_info['language']
                 del twitter_info['tweet_content']
-                self.replied_id_list.append(twitter_info)
+                del twitter_info['tweet_name']
+                self.replied_id_list.append(twitter_info['tweet_id'])
 
     async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
                                        api_dance_service, max_concurrent_tasks=10):
