@@ -73,13 +73,13 @@ class AutomaticallyReply(BaseJob):
                 self.replied_id_list.append(twitter_info['tweet_id'])
                 return
 
-            # twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
-            # language_result = await language_detection(twitter_info['tweet_content'])
-            # twitter_info['language'] = language_result.name
-            # result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
-            # data = await gpt_analyze_service.get_gpt_translation(result, twitter_info['language'])
-            # api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
-            # self.replied_id_list.append(twitter_info['tweet_id'])
+            twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
+            language_result = await language_detection(twitter_info['tweet_content'])
+            twitter_info['language'] = language_result.name
+            result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
+            data = await gpt_analyze_service.get_gpt_translation(result, twitter_info['language'])
+            api_dance_service.send_reply_to_twitter(twitter_content=data, twitter_id=twitter_info['tweet_id'])
+            self.replied_id_list.append(twitter_info['tweet_id'])
 
     async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
                                        api_dance_service, max_concurrent_tasks=10):
