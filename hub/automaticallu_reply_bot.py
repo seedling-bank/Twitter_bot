@@ -18,7 +18,6 @@ from utils.content_generation import twitter_content_generation
 from utils.language_detection import language_detection
 from utils.search_term import get_search_term
 
-
 pool = redis.ConnectionPool.from_url(con.config.settings.REDIS_URL, max_connections=100000)
 redis_client = redis.Redis(connection_pool=pool)
 
@@ -37,13 +36,14 @@ class AutomaticallyReply(BaseJob):
     async def remove_from_replied_set(self, reply_id):
         """从集合中移除ID，并同步到Redis"""
         await self.redis_client.srem(self.redis_key, reply_id)
+
     async def is_in_replied_set(self, reply_id):
         """检查是否在集合中"""
-        return await self.redis_client.sismember(self.redis_key, reply_id)
+        return self.redis_client.sismember(self.redis_key, reply_id)
 
     async def get_all_replied_ids(self):
         """获取 Redis 集合中的所有 ID"""
-        raw_ids = await self.redis_client.smembers(self.redis_key)
+        raw_ids = self.redis_client.smembers(self.redis_key)
         return {id.decode() for id in raw_ids}
 
     def init(self):
@@ -80,7 +80,7 @@ class AutomaticallyReply(BaseJob):
             loguru.logger.error(f"self.replied_id_set----------------_{await self.get_all_replied_ids()}")
             if response_list_required:
                 for twitter_info in response_list_required:
-                    if (twitter_info['tweet_id'] not in self.get_all_replied_ids() and
+                    if (twitter_info['tweet_id'] not in await self.get_all_replied_ids() and
                             "@lyricpaxsrks MBTI" in twitter_info['tweet_content']):
                         language_result = await language_detection(twitter_info['tweet_content'])
                         twitter_info['language'] = language_result.name
