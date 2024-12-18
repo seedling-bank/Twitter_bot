@@ -19,6 +19,11 @@ class ApiDanceService:
         self.twitter_auth_token = con.config.settings.TWITTER_AUTH_TOKEN
 
     def get_search_data(self, search):
+        """
+        获取第一页搜索结果
+        :param search:
+        :return:
+        """
         for attempt in range(1, con.config.settings.MAX_RETRIES + 1):
             base_url = f'api.apidance.pro'
 
@@ -37,6 +42,12 @@ class ApiDanceService:
             return data.decode('utf-8')
 
     def get_next_search_data(self, search, next_cursor_str):
+        """
+        获取下一页的搜索结果
+        :param search:
+        :param next_cursor_str:
+        :return:
+        """
         for attempt in range(1, con.config.settings.MAX_RETRIES + 1):
             base_url = f'api.apidance.pro'
 

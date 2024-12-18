@@ -19,5 +19,17 @@ class Settings(BaseSettings):
     # TWITTER_ID: str = '1661204064376348672'
     # TWITTER_NAME: str = '@mr_gongmm'
 
+    # 测试环境
+    DATABASE_URI: str = "mysql+aiomysql://root:mm123123@127.0.0.1:3306/mbti"
+    # 正式环境
+    # DATABASE_URI: str = "mysql+aiomysql://cb:cryptoBricks123@cb-rds.cw5tnk9dgstt.us-west-2.rds.amazonaws.com:3306/mbti"
+
+    # 测试环境Redis
+    # REDIS_URL: str = "redis://10.244.4.140:6379/14"
+    # 生产环境redis
+    REDIS_URL: str = "redis://10.244.4.58:6379/14"
+    # 本地环境Redis
+    # REDIS_URL: str = "redis://127.0.0.1:6379/14"
+
 
 settings = Settings()

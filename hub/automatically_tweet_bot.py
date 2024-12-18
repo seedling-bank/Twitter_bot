@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 import traceback
 
 import loguru
@@ -7,6 +8,7 @@ import loguru
 from base import BaseJob
 from services.apidance_service import api_dance_service
 from services.gpt_analyze_services import gpt_analyze_service
+from services.mention_users_service import mention_users_service
 from services.twitter_service import twitter_service
 from utils.content_generation import twitter_content_generation
 from utils.search_term import get_search_term
@@ -33,6 +35,7 @@ class AutomaticallyTweet(BaseJob):
 
     async def twitter_bot(self):
         try:
+            # 使用随机词条进行搜索
             search_list = ['btc', 'eth', 'web3', 'ai', 'agent']
             search = get_search_term(search_list)
             loguru.logger.info(f"Searching for {search}")
@@ -44,6 +47,17 @@ class AutomaticallyTweet(BaseJob):
                 loguru.logger.info(f"search_results for {search_results}")
             user_info = twitter_service.get_twitter_username(json.loads(search_results))
             loguru.logger.info(f"user_info for {user_info}")
+
+            # 使用search列表进行搜索
+            # results = await mention_users_service.get_twitter_celebrities_data()
+            # result = random.choices(results)
+            # await mention_users_service.update_twitter_celebrities_data(result[0].twitter_id)
+            # user_info = {
+            #     'user_id': result[0].twitter_id,
+            #     'user_name': result[0].twitter_username,
+            #     'user_username': result[0].twitter_name
+            # }
+
             initial_content = await gpt_analyze_service.twitter_name_analyzer(user_info.get("user_username"))
             loguru.logger.info(f"initial_content for {initial_content}")
             twitter_content = await twitter_content_generation(analyze_content=initial_content, user_info=user_info)
