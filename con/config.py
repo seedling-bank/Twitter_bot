@@ -27,9 +27,9 @@ class Settings(BaseSettings):
     # 测试环境Redis
     # REDIS_URL: str = "redis://10.244.4.140:6379/14"
     # 生产环境redis
-    # REDIS_URL: str = "redis://10.244.4.58:6379/14"
+    REDIS_URL: str = "redis://10.244.4.58:6379/14"
     # 本地环境Redis
-    REDIS_URL: str = "redis://127.0.0.1:6379/14"
+    # REDIS_URL: str = "redis://127.0.0.1:6379/14"
 
 
 settings = Settings()
