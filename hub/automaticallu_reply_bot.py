@@ -25,9 +25,13 @@ redis_client = from_url(con.config.settings.REDIS_URL, decode_responses=True, ma
 class AutomaticallyReply(BaseJob):
 
     def __init__(self, redis_key='replied_id_set'):
-        self.redis_client = redis_client
+        self.redis_client = None
         self.redis_key = redis_key
         self.lock = Lock()
+
+    async def initialize_redis(self):
+        # 初始化 Redis 客户端
+        self.redis_client = from_url(con.config.settings.REDIS_URL, decode_responses=True, max_connections=100000)
 
     async def add_to_replied_set(self, reply_id):
         """添加ID到集合中，并同步到Redis"""
@@ -64,6 +68,7 @@ class AutomaticallyReply(BaseJob):
         }
 
     async def twitter_bot(self):
+        await self.initialize_redis()
         search_result_list = []
         try:
             # 获取搜索第一页
@@ -78,23 +83,23 @@ class AutomaticallyReply(BaseJob):
 
             response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
             loguru.logger.error(f"response_list_required----------------_{response_list_required}")
-            loguru.logger.error(f"self.replied_id_set----------------_{await self.get_all_replied_ids()}")
             if response_list_required:
+                ids = await self.get_all_replied_ids()
                 for twitter_info in response_list_required:
-                    if (twitter_info['tweet_id'] not in await self.get_all_replied_ids() and
+                    if (twitter_info['tweet_id'] not in ids and
                             "@lyricpaxsrks MBTI" in twitter_info['tweet_content']):
                         language_result = await language_detection(twitter_info['tweet_content'])
                         twitter_info['language'] = language_result.name
                         await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
                         await self.add_to_replied_set(str(twitter_info['tweet_id']))
-                await self.process_all_twitter_info(response_list_required, gpt_analyze_service, api_dance_service)
+                await self.process_all_twitter_info(ids, response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
 
-    async def process_twitter_info(self, twitter_info, gpt_analyze_service, api_dance_service, semaphore):
+    async def process_twitter_info(self, ids, twitter_info, gpt_analyze_service, api_dance_service, semaphore):
         async with semaphore:
-            if twitter_info['tweet_id'] in (await self.get_all_replied_ids()):
+            if twitter_info['tweet_id'] in ids:
                 return  # 如果已经回复过，直接返回h
             twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
             language_result = await language_detection(twitter_info['tweet_content'])
@@ -104,12 +109,12 @@ class AutomaticallyReply(BaseJob):
                 api_dance_service.send_reply_to_twitter(twitter_content=result, twitter_id=twitter_info['tweet_id'])
             await self.add_to_replied_set(str(twitter_info['tweet_id']))
 
-    async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
+    async def process_all_twitter_info(self, ids, response_list_required, gpt_analyze_service,
                                        api_dance_service, max_concurrent_tasks=10):
         semaphore = asyncio.Semaphore(max_concurrent_tasks)
         # 创建任务列表
         tasks = [
-            self.process_twitter_info(twitter_info, gpt_analyze_service, api_dance_service, semaphore)
+            self.process_twitter_info(ids, twitter_info, gpt_analyze_service, api_dance_service, semaphore)
             for twitter_info in response_list_required
         ]
         # 并发运行所有任务
