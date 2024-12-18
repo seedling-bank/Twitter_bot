@@ -43,8 +43,9 @@ class AutomaticallyReply(BaseJob):
 
     async def get_all_replied_ids(self):
         """获取 Redis 集合中的所有 ID"""
-        raw_ids =await self.redis_client.smembers(self.redis_key)
-        return {id.decode() for id in raw_ids}
+        raw_ids = await self.redis_client.smembers(self.redis_key)
+        # 数据已经是字符串类型，直接返回
+        return set(raw_ids)
 
     def init(self):
         loguru.logger.info("Initializing AutomaticallyReply")
