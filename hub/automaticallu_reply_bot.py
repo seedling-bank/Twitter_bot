@@ -85,7 +85,7 @@ class AutomaticallyReply(BaseJob):
                         language_result = await language_detection(twitter_info['tweet_content'])
                         twitter_info['language'] = language_result.name
                         await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
-                        await self.add_to_replied_set(twitter_info['tweet_id'])
+                        await self.add_to_replied_set(str(twitter_info['tweet_id']))
                 await self.process_all_twitter_info(response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
@@ -101,7 +101,7 @@ class AutomaticallyReply(BaseJob):
             if twitter_info['language'] == "ENGLISH":
                 result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
                 api_dance_service.send_reply_to_twitter(twitter_content=result, twitter_id=twitter_info['tweet_id'])
-            await self.add_to_replied_set(twitter_info['tweet_id'])
+            await self.add_to_replied_set(str(twitter_info['tweet_id']))
 
     async def process_all_twitter_info(self, response_list_required, gpt_analyze_service,
                                        api_dance_service, max_concurrent_tasks=10):
