@@ -43,7 +43,7 @@ class AutomaticallyReply(BaseJob):
 
     async def get_all_replied_ids(self):
         """获取 Redis 集合中的所有 ID"""
-        raw_ids = self.redis_client.smembers(self.redis_key)
+        raw_ids =await self.redis_client.smembers(self.redis_key)
         return {id.decode() for id in raw_ids}
 
     def init(self):
