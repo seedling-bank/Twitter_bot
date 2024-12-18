@@ -7,6 +7,7 @@ from asyncio import Lock
 
 import loguru
 import redis
+from redis.asyncio import from_url
 
 import con.config
 from base import BaseJob
@@ -18,8 +19,7 @@ from utils.content_generation import twitter_content_generation
 from utils.language_detection import language_detection
 from utils.search_term import get_search_term
 
-pool = redis.ConnectionPool.from_url(con.config.settings.REDIS_URL, max_connections=100000)
-redis_client = redis.Redis(connection_pool=pool)
+redis_client = from_url(con.config.settings.REDIS_URL, decode_responses=True, max_connections=100000)
 
 
 class AutomaticallyReply(BaseJob):
