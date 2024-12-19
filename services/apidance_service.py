@@ -217,7 +217,7 @@ api_dance_service = ApiDanceService()
 
 
 async def main():
-    result = await api_dance_service.get_user_twitter_article("1709536223294017537")
+    result = api_dance_service.get_search_data("MBTAI_")
     print(result)
 
 

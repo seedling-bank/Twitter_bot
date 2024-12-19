@@ -1,61 +1,61 @@
-import time
+import http.client
+import json
+import ssl
+import urllib.parse  # 用于处理 URL 编码
 
-import requests
-from requests_oauthlib import OAuth1
+# 定义参数
+base_url = "/graphql/Following"
+params = {
+    "userId": "44196397",  # 用户 ID
+    "count": 20,  # 获取的关注数量
+    "includePromotedContent": False  # 是否包含推广内容
+}
 
-# 你的 Twitter/X API 凭据
-API_KEY = "bxVqLNzMRUmGUY5dTRCPDb2Sg"
-API_SECRET_KEY = "riCChKdLJLk9n5gsv2dvRypqmsQKXbkxflqgPRavMU3jiT3P5U"
-ACCESS_TOKEN = "1709536223294017537-JeEQZG5ASNrekt6S8PA8OUuMirDphP"
-ACCESS_TOKEN_SECRET = "5mu7Chce1ijRSI8lBNEI7ChFN6N0aAWSQyJctmeffUxdJ"
+variables = json.dumps(params)  # 使用 json.dumps 确保是合法的 JSON 格式
 
+# 对 JSON 字符串进行 URL 编码
+query_string = urllib.parse.urlencode({"variables": variables})
 
-def get_user_tweets(user_id):
-    # 你的 Bearer Token
-    # BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAPcWxgEAAAAAAu3Jg4rwziCG811BICOvgN3oV%2Fg%3DfSdcuOVFiEB96leKJUKF6mb2QQgK0zVZf4kCbC1chLwEuMVvo8"
-    BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAGOuwEAAAAA4QtVadeOZlMXxJdWNynSjnXxuTs%3DwY3bUZwP0deo6vCTKjN5WusxYLZ2ZqfK9z8kPk0zM8zEDjh4iA"
+url = f"{base_url}?{query_string}"  # 拼接完整的路径
+print(url)
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+# 创建一个 HTTPS 连接对象
+conn = http.client.HTTPSConnection("api.apidance.pro", context=context)
 
-    # 请求 URL
-    url = f"https://api.twitter.com/2/users/{user_id}/tweets"
+# 请求的有效负载（此处为空字符串，因为是 GET 请求）
+payload = ''
 
+# 请求头，包含 API 密钥（需要替换为实际的 API 密钥）
+headers = {
+    'apikey': 'veyizsgc0f5x4mbl5k4xmajxvkhjex'  # 在这里填入您的 API 密钥
+}
 
-    # 请求头
-    headers = {
-        "Authorization": f"Bearer {BEARER_TOKEN}"
-    }
+# 发送 GET 请求
+conn.request("GET", url, payload, headers)
 
-    # 请求参数
-    params = {
-        "max_results": 100  # 获取最多 100 条推文
-    }
+# 获取响应
+res = conn.getresponse()
 
-    # 发送 GET 请求
-    response = requests.get(url, headers=headers, params=params)
+# 读取响应数据
+data = res.read()
 
-    # 检查响应状态码
-    if response.status_code == 200:
-        # 请求成功，解析 JSON 数据
-        tweets = response.json()
-        return tweets
-    elif response.status_code == 429:
-        # 速率限制，解析响应头
-        reset_time = int(response.headers.get("x-rate-limit-reset", time.time()))
-        current_time = int(time.time())
-        wait_time = reset_time - current_time
+# 将字节数据解码为字符串并打印
+result = data.decode("utf-8")
 
-        print("Rate limit exceeded.")
-        print(f"Rate limit will reset in {wait_time} seconds (at {time.ctime(reset_time)}).")
+# 关闭连接
+conn.close()
 
-        # 等待限制解除
-        time.sleep(wait_time + 1)  # 多等 1 秒，确保限制已解除
-        return get_user_tweets(user_id)  # 重试请求
-    else:
-        # 请求失败，打印错误信息
-        print(f"Error: {response.status_code}")
-        print(response.text)
+result = json.loads(result)
 
-
-if __name__ == '__main__':
-    result = get_user_tweets(4654805796)
-    print(result)
-
+for instruction in result.get("data").get('user').get('result').get('timeline').get('timeline').get('instructions'):
+    if instruction.get('type') == "TimelineAddEntries":
+        entries = instruction.get('entries')
+        for entry in entries:
+            print(entry)
+            # rest_id = entry.get('content').get('itemContent').get('user_results').get('result').get('rest_id')
+            # name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('name')
+            # screen_name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('screen_name')
+            # print(rest_id, name, screen_name)
+            # print('------------------------')

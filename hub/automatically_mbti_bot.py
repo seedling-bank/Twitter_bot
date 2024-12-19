@@ -89,7 +89,7 @@ class AutomaticallyMbti(BaseJob):
                         ids = await self.get_all_replied_ids()
                         for twitter_info in response_list_required:
                             if (twitter_info['tweet_id'] not in ids and
-                                    "@lyricpaxsrks MBTI" in twitter_info['tweet_content']):
+                                    f"{con.config.settings.TWITTER_NAME} MBTI" in twitter_info['tweet_content']):
                                 language_result = await language_detection(twitter_info['tweet_content'])
                                 twitter_info['language'] = language_result.name
                                 await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
