@@ -8,6 +8,7 @@ user_list = list()
 def verify_user_duplication(user_id):
     """
     验证是否已经使用过user
+    :param user_id:
     :return:
     """
     try:

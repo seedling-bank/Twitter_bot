@@ -36,27 +36,27 @@ class AutomaticallyTweet(BaseJob):
     async def twitter_bot(self):
         try:
             # 使用随机词条进行搜索
-            search_list = ['btc', 'eth', 'web3', 'ai', 'agent']
-            search = get_search_term(search_list)
-            loguru.logger.info(f"Searching for {search}")
-            while True:
-                search_results = api_dance_service.get_search_data(search=search)
-                if search_results != "local_rate_limited":
-                    if 'Rate limit exceeded.' not in search_results:
-                        break
-                loguru.logger.info(f"search_results for {search_results}")
-            user_info = twitter_service.get_twitter_username(json.loads(search_results))
-            loguru.logger.info(f"user_info for {user_info}")
+            # search_list = ['btc', 'eth', 'web3', 'ai', 'agent']
+            # search = get_search_term(search_list)
+            # loguru.logger.info(f"Searching for {search}")
+            # while True:
+            #     search_results = api_dance_service.get_search_data(search=search)
+            #     if search_results != "local_rate_limited":
+            #         if 'Rate limit exceeded.' not in search_results:
+            #             break
+            #     loguru.logger.info(f"search_results for {search_results}")
+            # user_info = twitter_service.get_twitter_username(json.loads(search_results))
+            # loguru.logger.info(f"user_info for {user_info}")
 
             # 使用search列表进行搜索
-            # results = await mention_users_service.get_twitter_celebrities_data()
-            # result = random.choices(results)
-            # await mention_users_service.update_twitter_celebrities_data(result[0].twitter_id)
-            # user_info = {
-            #     'user_id': result[0].twitter_id,
-            #     'user_name': result[0].twitter_username,
-            #     'user_username': result[0].twitter_name
-            # }
+            results = await mention_users_service.get_twitter_celebrities_data()
+            result = random.choices(results)
+            await mention_users_service.update_twitter_celebrities_data(result[0].twitter_id)
+            user_info = {
+                'user_id': result[0].twitter_id,
+                'user_name': result[0].twitter_username,
+                'user_username': result[0].twitter_name
+            }
 
             initial_content = await gpt_analyze_service.twitter_name_analyzer(user_info.get("user_username"))
             loguru.logger.info(f"initial_content for {initial_content}")

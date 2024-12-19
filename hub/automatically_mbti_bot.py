@@ -22,7 +22,7 @@ from utils.search_term import get_search_term
 redis_client = from_url(con.config.settings.REDIS_URL, decode_responses=True, max_connections=100000)
 
 
-class AutomaticallyReply(BaseJob):
+class AutomaticallyMbti(BaseJob):
 
     def __init__(self, redis_key='replied_id_set'):
         self.redis_client = None
@@ -30,6 +30,7 @@ class AutomaticallyReply(BaseJob):
         self.lock = Lock()
 
     async def initialize_redis(self):
+
         # 初始化 Redis 客户端
         self.redis_client = from_url(con.config.settings.REDIS_URL, decode_responses=True, max_connections=100000)
 
@@ -52,7 +53,7 @@ class AutomaticallyReply(BaseJob):
         return set(raw_ids)
 
     def init(self):
-        loguru.logger.info("Initializing AutomaticallyReply")
+        loguru.logger.info("Initializing AutomaticallyMbti")
 
     def get_scheduler(self):
         return {
@@ -92,33 +93,9 @@ class AutomaticallyReply(BaseJob):
                         twitter_info['language'] = language_result.name
                         await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
                         await self.add_to_replied_set(str(twitter_info['tweet_id']))
-                await self.process_all_twitter_info(ids, response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
-
-    async def process_twitter_info(self, ids, twitter_info, gpt_analyze_service, api_dance_service, semaphore):
-        async with semaphore:
-            if twitter_info['tweet_id'] in ids:
-                return  # 如果已经回复过，直接返回h
-            twitter_info['tweet_content'] = re.sub(r'@\w+', "", twitter_info['tweet_content']).strip()
-            language_result = await language_detection(twitter_info['tweet_content'])
-            twitter_info['language'] = language_result.name
-            if twitter_info['language'] == "ENGLISH":
-                result = await gpt_analyze_service.twitter_name_analyzer(twitter_info['tweet_content'])
-                api_dance_service.send_reply_to_twitter(twitter_content=result, twitter_id=twitter_info['tweet_id'])
-            await self.add_to_replied_set(str(twitter_info['tweet_id']))
-
-    async def process_all_twitter_info(self, ids, response_list_required, gpt_analyze_service,
-                                       api_dance_service, max_concurrent_tasks=10):
-        semaphore = asyncio.Semaphore(max_concurrent_tasks)
-        # 创建任务列表
-        tasks = [
-            self.process_twitter_info(ids, twitter_info, gpt_analyze_service, api_dance_service, semaphore)
-            for twitter_info in response_list_required
-        ]
-        # 并发运行所有任务
-        await asyncio.gather(*tasks)
 
     async def user_mbti_analyzer(self, twitter_info):
         if twitter_info:
@@ -130,17 +107,17 @@ class AutomaticallyReply(BaseJob):
             api_dance_service.send_reply_to_twitter(twitter_content=user_mbti, twitter_id=twitter_info['tweet_id'])
 
     async def do_job(self):
-        loguru.logger.info("---->{AutomaticallyReply} start")
+        loguru.logger.info("---->{AutomaticallyMbti} start")
         await self.twitter_bot()
 
 
-automatically_reply = AutomaticallyReply()
+automatically_mbti = AutomaticallyMbti()
 
 
 async def main():
     try:
-        automatically_reply = AutomaticallyReply()
-        await automatically_reply.twitter_bot()
+        automatically_mbti = AutomaticallyMbti()
+        await automatically_mbti.twitter_bot()
     except Exception as e:
         loguru.logger.error(e)
         loguru.logger.error(traceback.format_exc())
