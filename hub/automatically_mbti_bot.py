@@ -80,19 +80,20 @@ class AutomaticallyMbti(BaseJob):
                         break
             if search_results:
                 tweets = json.loads(search_results).get('tweets')
-                search_result_list.extend(tweets)
+                if tweets is not None:
+                    search_result_list.extend(tweets)
 
-            response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
-            loguru.logger.error(f"response_list_required----------------_{response_list_required}")
-            if response_list_required:
-                ids = await self.get_all_replied_ids()
-                for twitter_info in response_list_required:
-                    if (twitter_info['tweet_id'] not in ids and
-                            "@lyricpaxsrks MBTI" in twitter_info['tweet_content']):
-                        language_result = await language_detection(twitter_info['tweet_content'])
-                        twitter_info['language'] = language_result.name
-                        await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
-                        await self.add_to_replied_set(str(twitter_info['tweet_id']))
+                    response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
+                    loguru.logger.error(f"response_list_required----------------_{response_list_required}")
+                    if response_list_required:
+                        ids = await self.get_all_replied_ids()
+                        for twitter_info in response_list_required:
+                            if (twitter_info['tweet_id'] not in ids and
+                                    "@lyricpaxsrks MBTI" in twitter_info['tweet_content']):
+                                language_result = await language_detection(twitter_info['tweet_content'])
+                                twitter_info['language'] = language_result.name
+                                await asyncio.create_task(self.user_mbti_analyzer(twitter_info))
+                                await self.add_to_replied_set(str(twitter_info['tweet_id']))
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
