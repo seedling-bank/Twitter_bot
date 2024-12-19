@@ -51,11 +51,15 @@ result = json.loads(result)
 
 for instruction in result.get("data").get('user').get('result').get('timeline').get('timeline').get('instructions'):
     if instruction.get('type') == "TimelineAddEntries":
-        entries = instruction.get('entries')
+        entries = instruction.get('entries')[:-2]
         for entry in entries:
-            print(entry)
-            # rest_id = entry.get('content').get('itemContent').get('user_results').get('result').get('rest_id')
-            # name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('name')
-            # screen_name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('screen_name')
-            # print(rest_id, name, screen_name)
-            # print('------------------------')
+            try:
+                rest_id = entry.get('content').get('itemContent').get('user_results').get('result').get('rest_id')
+                name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('name')
+                screen_name = entry.get('content').get('itemContent').get('user_results').get('result').get('legacy').get('screen_name')
+                print(rest_id, name, screen_name)
+                print('------------------------')
+            except Exception as e:
+                pass
+
+

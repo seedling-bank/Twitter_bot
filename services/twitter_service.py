@@ -261,7 +261,7 @@ class TwitterService:
                                     if instructions:
                                         for index_instruction, instruction in enumerate(instructions):
                                             if instruction.get('type') == "TimelineAddEntries":
-                                                entries = instruction.get('entries', None)
+                                                entries = instruction.get('entries', None)[:-2]
                                                 if entries:
                                                     text_list = ""
                                                     for index_entrie, entrie in enumerate(entries):
@@ -283,9 +283,10 @@ class TwitterService:
                                                                             if legacy:
                                                                                 full_text = legacy.get('full_text',
                                                                                                        None)
-                                                                                text_list += (str(
-                                                                                    index_entrie + 1)
-                                                                                              + '.' + full_text + '\n')
+                                                                                if full_text:
+                                                                                    text_list += (str(
+                                                                                        index_entrie + 1)
+                                                                                                  + '.' + full_text + '\n')
                                                                             else:
                                                                                 return None
                                                                     else:
