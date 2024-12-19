@@ -25,9 +25,9 @@ class Settings(BaseSettings):
     # TWITTER_NAME: str = '@mr_gongmm'
 
     # 测试环境
-    DATABASE_URI: str = "mysql+aiomysql://root:mm123123@127.0.0.1:3306/mbti"
+    # DATABASE_URI: str = "mysql+aiomysql://root:mm123123@127.0.0.1:3306/mbti"
     # 正式环境
-    # DATABASE_URI: str = "mysql+aiomysql://cb:cryptoBricks123@cb-rds.cw5tnk9dgstt.us-west-2.rds.amazonaws.com:3306/mbti"
+    DATABASE_URI: str = "mysql+aiomysql://cb:cryptoBricks123@cb-rds.cw5tnk9dgstt.us-west-2.rds.amazonaws.com:3306/mbti"
 
     # 测试环境Redis
     # REDIS_URL: str = "redis://10.244.4.140:6379/14"
