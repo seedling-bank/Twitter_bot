@@ -80,13 +80,14 @@ class AutomaticallyReply(BaseJob):
                         break
             if search_results:
                 tweets = json.loads(search_results).get('tweets')
-                search_result_list.extend(tweets)
+                if tweets is not None:
+                    search_result_list.extend(tweets)
 
-            response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
-            loguru.logger.error(f"response_list_required----------------_{response_list_required}")
-            if response_list_required:
-                ids = await self.get_all_replied_ids()
-                await self.process_all_twitter_info(ids, response_list_required, gpt_analyze_service, api_dance_service)
+                    response_list_required = twitter_service.get_search_resul_analysis(search_result_list)
+                    loguru.logger.error(f"response_list_required----------------_{response_list_required}")
+                    if response_list_required:
+                        ids = await self.get_all_replied_ids()
+                        await self.process_all_twitter_info(ids, response_list_required, gpt_analyze_service, api_dance_service)
         except Exception as e:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
