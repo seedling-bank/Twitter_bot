@@ -7,9 +7,14 @@ class Settings(BaseSettings):
 
     APIDANCE_API_KEY: str = "veyizsgc0f5x4mbl5k4xmajxvkhjex"
 
-    TWITTER_AUTH_TOKEN: str = "efb2cd709ed756e8ef34ba30ce7981af2addf6ca"
-    TWITTER_ID: str = '4654805796'
-    TWITTER_NAME: str = '@lyricpaxsrks'
+    # test
+    # TWITTER_AUTH_TOKEN: str = "efb2cd709ed756e8ef34ba30ce7981af2addf6ca"
+    # TWITTER_ID: str = '4654805796'
+    # TWITTER_NAME: str = '@lyricpaxsrks'
+
+    TWITTER_AUTH_TOKEN: str = "7628935482e0e6dc6e3db8e0fc9cd33829458d99"
+    TWITTER_ID: str = '1913659728'
+    TWITTER_NAME: str = '@MBTAI_'
 
     MAX_RETRIES: int = 5
     DELAY: int = 5
