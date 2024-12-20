@@ -12,5 +12,4 @@ class TwitterCelebritiesModel(Base):
     twitter_name = Column(String)
     twitter_username = Column(String)
     is_used = Column(SmallInteger)
-
-
+    is_following = Column(SmallInteger)

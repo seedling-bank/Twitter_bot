@@ -304,5 +304,58 @@ class TwitterService:
             loguru.logger.error(e)
             loguru.logger.error(traceback.format_exc())
 
+    def following_data_analysis(self, user_data):
+        user_info_list = list()
+        if user_data:
+            data = user_data.get('data', None)
+            if data:
+                user = data.get('user', None)
+                if user:
+                    result = user.get('result', None)
+                    if result:
+                        timeline_1 = result.get('timeline', None)
+                        if timeline_1:
+                            timeline_2 = timeline_1.get('timeline', None)
+                            if timeline_2:
+                                instructions = timeline_2.get('instructions', None)
+                                if instructions:
+                                    for instruction in instructions:
+                                        if instruction.get("type") == "TimelineAddEntries":
+                                            entries = instruction.get("entries")[:-2]
+                                            next_entries = instruction.get('entries')[-2:-1]
+                                            if entries:
+                                                for entry in entries:
+                                                    content = entry.get('content', None)
+                                                    if content:
+                                                        itemContent = content.get('itemContent', None)
+                                                        if itemContent:
+                                                            user_results = itemContent.get('user_results', None)
+                                                            if user_results:
+                                                                result = user_results.get('result', None)
+                                                                user_info = {
+                                                                    'user_id': result.get('rest_id'),
+                                                                    'user_name': result.get('legacy').get(
+                                                                        'screen_name'),
+                                                                    "user_username": result.get('legacy').get('name')
+                                                                }
+                                                                user_info_list.append(user_info)
+
+                                            if next_entries:
+                                                for entry in next_entries:
+                                                    next_cursor = entry.get('content').get("value")
+                                            return user_info_list, next_cursor
+                            else:
+                                return None
+                        else:
+                            return None
+                    else:
+                        return None
+                else:
+                    return None
+            else:
+                return None
+        else:
+            return None
+
 
 twitter_service = TwitterService()

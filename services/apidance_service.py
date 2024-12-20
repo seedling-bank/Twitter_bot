@@ -3,6 +3,7 @@ import http.client
 import json
 import ssl
 import traceback
+import urllib.parse
 from typing import Optional
 
 import loguru
@@ -211,6 +212,22 @@ class ApiDanceService:
             response = requests.request("GET", url, headers=headers, data=payload)
             if response.status_code == 200:
                 return response.text
+
+    def get_user_following(self, user_info):
+        base_url = "https://api.apidance.pro/graphql/Following?variables="
+        params = {
+            "userId": user_info["user_id"],
+            "count": 20,
+            "includePromotedContent": False
+        }
+        headers = {
+            'apikey': self.api_key
+        }
+        url = base_url + json.dumps(params)
+
+        response = requests.request("GET", url, headers=headers)
+        if response.status_code == 200:
+            return response.text
 
 
 api_dance_service = ApiDanceService()

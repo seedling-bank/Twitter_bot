@@ -1,7 +1,8 @@
 import asyncio
 import random
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 import con.config
@@ -38,6 +39,33 @@ class MentionUsersService:
                 update(TwitterCelebritiesModel)
                 .where(TwitterCelebritiesModel.twitter_id == twitter_id)
                 .values(is_used=1)
+            )
+            await session.commit()
+
+    async def insert_twitter_celebrities_data(self, twitter_info):
+        async with SessionFactory() as session:
+            try:
+                # 创建插入语句
+                stmt = insert(TwitterCelebritiesModel).values(
+                    twitter_id=twitter_info['user_id'],
+                    twitter_name=twitter_info['user_name'],
+                    twitter_username=twitter_info['user_username'],
+                    is_used=0,
+                    is_following=0
+                )
+                await session.execute(stmt)  # 执行插入语句
+                await session.commit()  # 提交事务
+            except IntegrityError:
+                # 处理唯一性错误（例如记录已存在）
+                print(f"Record with twitter_id {twitter_info['user_id']} already exists.")
+                pass
+
+    async def update_user_following_data(self, twitter_id):
+        async with SessionFactory() as session:
+            result = await session.execute(
+                update(TwitterCelebritiesModel)
+                .where(TwitterCelebritiesModel.twitter_id == twitter_id)
+                .values(is_following=1)
             )
             await session.commit()
 
